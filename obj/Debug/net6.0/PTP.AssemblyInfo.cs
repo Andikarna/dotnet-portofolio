@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PTP")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a359a8b2ff5a5cec34079e3b02cb7c5a8d1a6681")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+96cead2bcad0e6681ada898b4fca4d6bd498e2de")]
 [assembly: System.Reflection.AssemblyProductAttribute("PTP")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PTP")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

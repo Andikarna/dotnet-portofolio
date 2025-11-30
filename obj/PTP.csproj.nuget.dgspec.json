@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Document\\Visual Studio 2022\\Project Employee\\PTP.csproj": {}
+    "E:\\Document\\Visual Studio 2022\\Portofolio-Dotnet\\PTP.csproj": {}
   },
   "projects": {
-    "E:\\Document\\Visual Studio 2022\\Project Employee\\PTP.csproj": {
+    "E:\\Document\\Visual Studio 2022\\Portofolio-Dotnet\\PTP.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Document\\Visual Studio 2022\\Project Employee\\PTP.csproj",
+        "projectUniqueName": "E:\\Document\\Visual Studio 2022\\Portofolio-Dotnet\\PTP.csproj",
         "projectName": "PTP",
-        "projectPath": "E:\\Document\\Visual Studio 2022\\Project Employee\\PTP.csproj",
+        "projectPath": "E:\\Document\\Visual Studio 2022\\Portofolio-Dotnet\\PTP.csproj",
         "packagesPath": "C:\\Users\\Lenovo\\.nuget\\packages\\",
-        "outputPath": "E:\\Document\\Visual Studio 2022\\Project Employee\\obj\\",
+        "outputPath": "E:\\Document\\Visual Studio 2022\\Portofolio-Dotnet\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -1,14 +1,19 @@
-using AdidataDbContext.Models.MySql.Auth;
-using AdidataDbContext.Models.MySql.Recruitment;
-using AdidataDbContext.Models.MySql.Hrm;
+using AdidataDbContext.Models.Mysql.PTPDev;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Minio;
+using Newtonsoft.Json.Serialization;
+using PTP.AuthenticationRepository;
+using PTP.Dto;
+using PTP.Interface;
+using PTP.Service;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System.Text;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
 
 namespace BasicProject
 {
@@ -23,12 +28,31 @@ namespace BasicProject
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
-
-            services.AddDbContext<RecruitmentContext>(options =>
-                options.UseMySql(Configuration.GetConnectionString("Recruitment"),
+            services.AddDbContext<PTPDevContext>(options =>
+                options.UseMySql(Configuration.GetConnectionString("PTP"),
                 Microsoft.EntityFrameworkCore.ServerVersion.Parse("10.4.28-mariadb")));
 
+            services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
+            services.AddScoped<AuthenticationService>();
+
+
+            services.Configure<MinioSettings>(Configuration.GetSection("Minio"));
+
+
+            services.AddSingleton<IMinioClient>(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>()
+                               .GetSection("Minio")
+                               .Get<MinioSettings>();
+
+                return new MinioClient()
+                    .WithEndpoint(config.Endpoint)
+                    .WithCredentials(config.AccessKey, config.SecretKey)
+                    .WithSSL(config.UseSSL)
+                    .Build();
+            });
+
+            services.AddControllers();
 
             services.AddSwaggerGen(c =>
             {
@@ -36,12 +60,13 @@ namespace BasicProject
 
                 var securitySchema = new OpenApiSecurityScheme
                 {
+                    In = ParameterLocation.Header,
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                     Name = "Authorization",
-                    In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey,
                     Scheme = "bearer",
                     BearerFormat = "JWT",
+
                     Reference = new OpenApiReference
                     {
                         Id = JwtBearerDefaults.AuthenticationScheme,
@@ -53,9 +78,9 @@ namespace BasicProject
                 var security = new OpenApiSecurityRequirement();
                 security.Add(securitySchema, new[] { "Bearer" });
                 c.AddSecurityRequirement(security);
+
             });
 
-            //add cors
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll",
@@ -72,16 +97,52 @@ namespace BasicProject
             });
 
             services.AddControllersWithViews()
-   .AddNewtonsoftJson(options =>
-   options.SerializerSettings.ReferenceLoopHandling = Newtonsoft
-   .Json.ReferenceLoopHandling.Ignore)
-   .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver
-   = new CamelCasePropertyNamesContractResolver());
+               .AddNewtonsoftJson(options =>
+               options.SerializerSettings.ReferenceLoopHandling = Newtonsoft
+               .Json.ReferenceLoopHandling.Ignore)
+               .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver
+               = new CamelCasePropertyNamesContractResolver());
 
 
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+           .AddJwtBearer(options =>
+           {
+               options.TokenValidationParameters = new TokenValidationParameters
+               {
+                   ValidateIssuer = true,
+                   ValidateAudience = true,
+                   ValidateLifetime = true,
+                   ValidateIssuerSigningKey = true,
+                   ValidIssuer = Configuration["Jwt:Issuer"],
+                   ValidAudience = Configuration["Jwt:Audience"],
+                   IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
+
+               };
+               options.Events = new JwtBearerEvents
+               {
+                   OnChallenge = context =>
+                   {
+                       // Menghapus response default agar tidak override pesan kita
+                       context.HandleResponse();
+
+                       // Set status code dan custom message
+                       context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                       context.Response.ContentType = "application/json";
+                       var result = JsonSerializer.Serialize(new { message = "Unautorizhe Token" });
+
+                       return context.Response.WriteAsync(result);
+                   }
+               };
+
+           });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddHttpContextAccessor();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -95,13 +156,11 @@ namespace BasicProject
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/basic/swagger/v1/swagger.json", "Dokumen");
+                c.SwaggerEndpoint("/ptpdev/swagger/v1/swagger.json", "Dokumen");
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dokumen");
                 c.DocumentTitle = "Documentation";
                 c.DocExpansion(DocExpansion.List);
             });
-
-
 
             app.UseRouting();
             app.UseCors("AllowAll");
