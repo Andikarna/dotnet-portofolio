@@ -2,6 +2,8 @@
 # Visual Studio / IDE files
 # =========================
 .vs/
+obj/
+bin/
 *.suo
 *.user
 *.userosscache
